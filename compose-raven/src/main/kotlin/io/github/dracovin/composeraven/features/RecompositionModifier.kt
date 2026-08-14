@@ -16,41 +16,43 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.dracovin.composeraven.InspectableElement
+import io.github.dracovin.composeraven.InspectorConfig
 import io.github.dracovin.composeraven.RavenState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-fun Modifier.recompositionHeatmap(): Modifier = composed {
+fun Modifier.recompositionHeatmap(
+    color: Color = Color(0xFFFF6D00),
+    peakAlpha: Float = 0.55f,
+    durationMs: Int = 400,
+): Modifier = composed {
     val enabled by RavenState.heatmapEnabled.collectAsStateWithLifecycle()
     if (!enabled) return@composed Modifier
 
-    val alpha    = remember { Animatable(0f) }
-    val scope    = rememberCoroutineScope()
-    // Plain (non-state) holders — writes here don't trigger recomposition
+    val alpha     = remember { Animatable(0f) }
+    val scope     = rememberCoroutineScope()
     val activated = remember { booleanArrayOf(false) }
     val jobRef    = remember { arrayOfNulls<Job>(1) }
 
     SideEffect {
         if (!activated[0]) {
-            // First SideEffect is the activation recompose — skip it
             activated[0] = true
             return@SideEffect
         }
-        // Real recompose: cancel any in-flight animation, restart fresh
         jobRef[0]?.cancel()
         jobRef[0] = scope.launch {
-            alpha.snapTo(0.55f)
-            alpha.animateTo(targetValue = 0f, animationSpec = tween(durationMillis = 400))
+            alpha.snapTo(peakAlpha)
+            alpha.animateTo(targetValue = 0f, animationSpec = tween(durationMillis = durationMs))
         }
     }
 
     drawWithContent {
         drawContent()
-        drawRect(color = Color(0xFFFF6D00).copy(alpha = alpha.value))
+        drawRect(color = color.copy(alpha = alpha.value))
     }
 }
 
-fun Modifier.ravenInspectable(tag: String = ""): Modifier = composed {
+fun Modifier.ravenInspectable(tag: String = "", config: InspectorConfig = InspectorConfig()): Modifier = composed {
     val enabled by RavenState.inspectorEnabled.collectAsStateWithLifecycle()
     if (!enabled) return@composed Modifier
 
@@ -65,6 +67,7 @@ fun Modifier.ravenInspectable(tag: String = ""): Modifier = composed {
             ),
             widthDp  = with(density) { bounds.width.toDp().value },
             heightDp = with(density) { bounds.height.toDp().value },
+            config   = config,
         )
         val current = RavenState.inspectableElements.value.toMutableList()
         val idx = if (tag.isNotEmpty()) {
