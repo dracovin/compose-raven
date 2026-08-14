@@ -27,3 +27,4 @@ kotlin-android      = { id = "org.jetbrains.kotlin.android",        version.ref 
 compose-compiler    = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 maven-publish       = { id = "maven-publish" }
 signing             = { id = "signing"        }
+nmcp                = { id = "com.gradleup.nmcp", version = "0.0.9" }

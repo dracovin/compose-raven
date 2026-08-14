@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.nmcp)
     id("maven-publish")
     id("signing")
 }
@@ -16,6 +17,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    publishing {
+        singleVariant("release")
+    }
 }
 
 dependencies {
@@ -36,69 +40,63 @@ dependencies {
     androidTestImplementation(libs.compose.ui.test.manifest)
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                from(components["release"])
-                groupId    = "io.github.dracovin"
-                artifactId = "compose-raven"
-                version    = "0.1.0-alpha01"
+publishing {
+    publications {
+        create<MavenPublication>("release") {
+            groupId    = "io.github.dracovin"
+            artifactId = "compose-raven"
+            version    = "0.1.0-alpha01"
 
-                pom {
-                    name        = "composeRaven"
-                    description = "Zero-boilerplate in-app UI inspector & debug overlay for Jetpack Compose"
-                    url         = "https://github.com/dracovin/compose-raven"
-                    licenses {
-                        license {
-                            name = "Apache-2.0"
-                            url  = "https://www.apache.org/licenses/LICENSE-2.0"
-                        }
-                    }
-                    developers {
-                        developer {
-                            id    = "dracovin"
-                            name  = "dracovin"
-                            email = "siddhardha.d@kynhood.com"
-                        }
-                    }
-                    scm {
-                        connection          = "scm:git:git://github.com/dracovin/compose-raven.git"
-                        developerConnection = "scm:git:ssh://github.com/dracovin/compose-raven.git"
-                        url                 = "https://github.com/dracovin/compose-raven"
+            afterEvaluate { from(components["release"]) }
+
+            pom {
+                name        = "composeRaven"
+                description = "Zero-boilerplate in-app UI inspector & debug overlay for Jetpack Compose"
+                url         = "https://github.com/dracovin/compose-raven"
+                licenses {
+                    license {
+                        name = "Apache-2.0"
+                        url  = "https://www.apache.org/licenses/LICENSE-2.0"
                     }
                 }
-            }
-        }
-
-        repositories {
-            maven {
-                name = "Local"
-                url  = uri(layout.buildDirectory.dir("local-repo"))
-            }
-            maven {
-                name = "MavenCentral"
-                url  = uri(
-                    if (version.toString().endsWith("SNAPSHOT"))
-                        "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-                    else
-                        "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-                )
-                credentials {
-                    username = providers.gradleProperty("ossrhUsername").orNull
-                    password = providers.gradleProperty("ossrhPassword").orNull
+                developers {
+                    developer {
+                        id    = "dracovin"
+                        name  = "dracovin"
+                        email = "siddhardha.d@kynhood.com"
+                    }
+                }
+                scm {
+                    connection          = "scm:git:git://github.com/dracovin/compose-raven.git"
+                    developerConnection = "scm:git:ssh://github.com/dracovin/compose-raven.git"
+                    url                 = "https://github.com/dracovin/compose-raven"
                 }
             }
         }
     }
 
-    signing {
-        val keyId      = providers.gradleProperty("signing.keyId").orNull
-        val password   = providers.gradleProperty("signing.password").orNull
-        val secretRing = providers.gradleProperty("signing.secretKeyRingFile").orNull
-        if (keyId != null && password != null && secretRing != null) {
-            useInMemoryPgpKeys(file(secretRing).readText(), password)
-            sign(publishing.publications["release"])
+    repositories {
+        maven {
+            name = "Local"
+            url  = uri(layout.buildDirectory.dir("local-repo"))
         }
+    }
+}
+
+signing {
+    val keyId      = providers.gradleProperty("signing.keyId").orNull
+    val password   = providers.gradleProperty("signing.password").orNull
+    val secretRing = providers.gradleProperty("signing.secretKeyRingFile").orNull
+    if (keyId != null && password != null && secretRing != null) {
+        useInMemoryPgpKeys(file(secretRing).readText(), password)
+        sign(publishing.publications["release"])
+    }
+}
+
+nmcp {
+    publish("release") {
+        username = providers.gradleProperty("ossrhUsername").get()
+        password = providers.gradleProperty("ossrhPassword").get()
+        publicationType = "AUTOMATIC"
     }
 }

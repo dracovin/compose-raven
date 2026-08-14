@@ -2,8 +2,10 @@
 .gradle/
 .idea/
 build/
+docs/
 local.properties
 *.keystore
 *.jks
 secring.gpg
 gradle.properties.local
+.DS_Store
