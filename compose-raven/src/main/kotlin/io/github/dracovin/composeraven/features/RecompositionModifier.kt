@@ -24,13 +24,14 @@ fun Modifier.recompositionHeatmap(): Modifier = composed {
     val enabled by RavenState.heatmapEnabled.collectAsState()
     if (!enabled) return@composed Modifier
 
-    var recomposeCount by remember { mutableIntStateOf(0) }
-    // SideEffect runs after every successful recomposition — increments the counter
+    // Start at -1 so the first SideEffect (activation recompose) brings it to 0,
+    // which we skip — only count > 0 means a real subsequent recompose.
+    var recomposeCount by remember { mutableIntStateOf(-1) }
     SideEffect { recomposeCount++ }
 
     val alpha = remember { Animatable(0f) }
-    // LaunchedEffect restarts on each count change: snap to 0.55, fade to 0 over 400ms
     LaunchedEffect(recomposeCount) {
+        if (recomposeCount <= 0) return@LaunchedEffect
         alpha.snapTo(0.55f)
         alpha.animateTo(targetValue = 0f, animationSpec = tween(durationMillis = 400))
     }
