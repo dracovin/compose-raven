@@ -26,6 +26,8 @@ dependencies {
     implementation(libs.compose.material.icons.core)
     implementation(libs.startup.runtime)
     implementation(libs.coroutines.android)
+    implementation("androidx.lifecycle:lifecycle-viewmodel:2.8.3")
+    implementation("androidx.savedstate:savedstate:1.2.1")
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
