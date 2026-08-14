@@ -2,9 +2,8 @@ package io.github.dracovin.composeraven.features
 
 import android.app.Activity
 import android.graphics.Bitmap
-import android.os.Handler
-import android.os.Looper
-import android.view.PixelCopy
+import android.graphics.Canvas
+import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -45,35 +44,36 @@ internal fun ElementPickerOverlay() {
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures { tapOffset ->
-                    val xDp    = with(density) { tapOffset.x.toDp().value }
-                    val yDp    = with(density) { tapOffset.y.toDp().value }
-                    val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-                    val window = (view.context as? Activity)?.window ?: return@detectTapGestures
+                    val xDp = with(density) { tapOffset.x.toDp().value }
+                    val yDp = with(density) { tapOffset.y.toDp().value }
 
-                    PixelCopy.request(
-                        window,
-                        android.graphics.Rect(
-                            tapOffset.x.toInt(), tapOffset.y.toInt(),
-                            tapOffset.x.toInt() + 1, tapOffset.y.toInt() + 1,
-                        ),
-                        bitmap,
-                        { result ->
-                            if (result == PixelCopy.SUCCESS) {
-                                val hex     = bitmap.getPixel(0, 0).toRavenHex()
-                                val closest = closestElement(tapOffset)
-                                RavenState.pickedElement.value = PickedElementInfo(xDp, yDp, hex, closest)
-                            }
-                        },
-                        Handler(Looper.getMainLooper()),
-                    )
+                    // Sample one pixel from the app content view, which excludes
+                    // our overlay ComposeView sibling in the decor hierarchy.
+                    val activity = (view.context as? Activity) ?: return@detectTapGestures
+                    val contentView = activity.findViewById<View>(android.R.id.content)
+                    if (!contentView.isLaidOut) return@detectTapGestures
+
+                    val px = tapOffset.x.toInt().coerceIn(0, contentView.width - 1)
+                    val py = tapOffset.y.toInt().coerceIn(0, contentView.height - 1)
+
+                    val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+                    val canvas = Canvas(bitmap)
+                    canvas.translate(-px.toFloat(), -py.toFloat())
+                    contentView.draw(canvas)
+
+                    val hex     = bitmap.getPixel(0, 0).toRavenHex()
+                    bitmap.recycle()
+
+                    val closest = closestElement(tapOffset)
+                    RavenState.pickedElement.value = PickedElementInfo(xDp, yDp, hex, closest)
                 }
             },
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             pickedElement?.let { info ->
-                val cx   = with(density) { info.xDp.dp.toPx() }
-                val cy   = with(density) { info.yDp.dp.toPx() }
-                val arm  = 28f
+                val cx  = with(density) { info.xDp.dp.toPx() }
+                val cy  = with(density) { info.yDp.dp.toPx() }
+                val arm = 28f
                 drawLine(Color.Red, Offset(cx - arm, cy), Offset(cx + arm, cy), strokeWidth = 2f)
                 drawLine(Color.Red, Offset(cx, cy - arm), Offset(cx, cy + arm), strokeWidth = 2f)
 
@@ -110,7 +110,6 @@ private fun ElementInfoCard(info: PickedElementInfo, modifier: Modifier = Modifi
     }
 }
 
-// Strips alpha; formats RGB as lowercase hex e.g. "#c18a35"
 internal fun Int.toRavenHex(): String = "#%06x".format(this and 0xFFFFFF)
 
 private fun Float.fmt() = "%.1f".format(this)
