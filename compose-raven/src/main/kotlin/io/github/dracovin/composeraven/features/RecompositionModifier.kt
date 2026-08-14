@@ -4,7 +4,6 @@ import android.graphics.Rect
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -15,13 +14,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.dracovin.composeraven.InspectableElement
 import io.github.dracovin.composeraven.RavenState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 fun Modifier.recompositionHeatmap(): Modifier = composed {
-    val enabled by RavenState.heatmapEnabled.collectAsState()
+    val enabled by RavenState.heatmapEnabled.collectAsStateWithLifecycle()
     if (!enabled) return@composed Modifier
 
     val alpha    = remember { Animatable(0f) }
@@ -51,7 +51,7 @@ fun Modifier.recompositionHeatmap(): Modifier = composed {
 }
 
 fun Modifier.ravenInspectable(tag: String = ""): Modifier = composed {
-    val enabled by RavenState.inspectorEnabled.collectAsState()
+    val enabled by RavenState.inspectorEnabled.collectAsStateWithLifecycle()
     if (!enabled) return@composed Modifier
 
     val density = LocalDensity.current

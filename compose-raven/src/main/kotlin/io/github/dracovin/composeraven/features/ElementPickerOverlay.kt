@@ -15,7 +15,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,14 +27,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.dracovin.composeraven.InspectableElement
 import io.github.dracovin.composeraven.PickedElementInfo
 import io.github.dracovin.composeraven.RavenState
-import kotlin.math.hypot
 
 @Composable
 internal fun ElementPickerOverlay() {
-    val pickedElement by RavenState.pickedElement.collectAsState()
+    val pickedElement by RavenState.pickedElement.collectAsStateWithLifecycle()
     val density       = LocalDensity.current
     val view          = LocalView.current
 
@@ -64,7 +63,7 @@ internal fun ElementPickerOverlay() {
                     val hex     = bitmap.getPixel(0, 0).toRavenHex()
                     bitmap.recycle()
 
-                    val closest = closestElement(tapOffset)
+                    val closest = closestElement(tapOffset) ?: return@detectTapGestures
                     RavenState.pickedElement.value = PickedElementInfo(xDp, yDp, hex, closest)
                 }
             },
@@ -114,9 +113,10 @@ internal fun Int.toRavenHex(): String = "#%06x".format(this and 0xFFFFFF)
 
 private fun Float.fmt() = "%.1f".format(this)
 
-private fun closestElement(tapOffset: Offset): InspectableElement? =
-    RavenState.inspectableElements.value.minByOrNull { el ->
-        val cx = (el.boundsInWindow.left + el.boundsInWindow.right) / 2f
-        val cy = (el.boundsInWindow.top  + el.boundsInWindow.bottom) / 2f
-        hypot(tapOffset.x - cx, tapOffset.y - cy)
-    }
+private fun closestElement(tapOffset: Offset): InspectableElement? {
+    val x = tapOffset.x.toInt()
+    val y = tapOffset.y.toInt()
+    val hit = RavenState.inspectableElements.value.filter { it.boundsInWindow.contains(x, y) }
+    // Pick the smallest hit (most specific child); null if tap is in empty space.
+    return hit.minByOrNull { it.boundsInWindow.width().toLong() * it.boundsInWindow.height() }
+}
