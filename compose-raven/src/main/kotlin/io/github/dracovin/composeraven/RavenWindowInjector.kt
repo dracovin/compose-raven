@@ -6,8 +6,8 @@ import android.graphics.PixelFormat
 import android.os.Bundle
 import android.view.Gravity
 import android.view.WindowManager
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
+import io.github.dracovin.composeraven.overlay.RavenOverlayRoot
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
@@ -44,7 +44,7 @@ internal class RavenWindowInjector : Application.ActivityLifecycleCallbacks {
             setViewTreeLifecycleOwner(activity)
             setViewTreeViewModelStoreOwner(activity)
             setViewTreeSavedStateRegistryOwner(activity)
-            setContent { OverlayPlaceholder() }
+            setContent { RavenOverlayRoot() }
         }
 
         // Swap touch flags when inspector activates so taps reach the overlay
@@ -93,7 +93,3 @@ internal class RavenWindowInjector : Application.ActivityLifecycleCallbacks {
     override fun onActivityStopped(activity: Activity) = Unit
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
 }
-
-// Replaced with RavenOverlayRoot() in Task 5
-@Composable
-private fun OverlayPlaceholder() {}
