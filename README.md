@@ -101,3 +101,7 @@ A draggable **⚙️ FAB** appears in the bottom-right corner of every screen. T
 ## License
 
 [Apache License 2.0](LICENSE)
+
+---
+
+<!-- keywords: jetpack compose debug overlay, compose recomposition heatmap, compose recomposition tracker, android compose ui inspector, jetpack compose layout inspector, compose element picker, android 8dp grid overlay, compose debug tools, jetpack compose performance debugging -->
