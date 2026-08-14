@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.MaterialTheme
 import io.github.dracovin.composeraven.RavenState
 import io.github.dracovin.composeraven.features.ElementPickerOverlay
 import io.github.dracovin.composeraven.features.GridOverlay
@@ -39,6 +40,7 @@ import kotlin.math.roundToInt
 
 @Composable
 internal fun RavenOverlayRoot() {
+    MaterialTheme {
     val heatmapEnabled   by RavenState.heatmapEnabled.collectAsState()
     val inspectorEnabled by RavenState.inspectorEnabled.collectAsState()
     val gridEnabled      by RavenState.gridEnabled.collectAsState()
@@ -85,6 +87,7 @@ internal fun RavenOverlayRoot() {
             }
         }
     }
+    } // MaterialTheme
 }
 
 @Composable

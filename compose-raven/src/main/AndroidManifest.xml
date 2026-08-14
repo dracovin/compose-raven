@@ -10,7 +10,7 @@
             tools:node="merge">
             <meta-data
                 android:name="io.github.dracovin.composeraven.RavenInitializer"
-                android:value="androidx.startup.Initializer" />
+                android:value="androidx.startup" />
         </provider>
     </application>
 
