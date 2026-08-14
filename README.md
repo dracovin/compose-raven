@@ -1,5 +1,9 @@
 # compose-raven
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.dracovin/compose-raven)](https://central.sonatype.com/artifact/io.github.dracovin/compose-raven)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![API](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://android-arsenal.com/api?level=26)
+
 A zero-boilerplate in-app debug overlay for Jetpack Compose. Drop it in as a dependency and a floating toolbar appears in your debug build — no setup code required.
 
 ```kotlin
