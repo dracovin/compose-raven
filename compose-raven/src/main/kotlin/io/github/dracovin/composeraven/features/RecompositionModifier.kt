@@ -58,7 +58,12 @@ fun Modifier.ravenInspectable(tag: String = ""): Modifier = composed {
             heightDp = with(density) { bounds.height.toDp().value },
         )
         val current = RavenState.inspectableElements.value.toMutableList()
-        val idx = if (tag.isNotEmpty()) current.indexOfFirst { it.tag == tag } else -1
+        // Use tag for named elements; bounds identity for untagged to prevent unbounded growth
+        val idx = if (tag.isNotEmpty()) {
+            current.indexOfFirst { it.tag == tag }
+        } else {
+            current.indexOfFirst { it.boundsInWindow == element.boundsInWindow }
+        }
         if (idx >= 0) current[idx] = element else current.add(element)
         RavenState.inspectableElements.value = current
     }

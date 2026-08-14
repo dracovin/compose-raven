@@ -82,11 +82,13 @@ internal class RavenWindowInjector : Application.ActivityLifecycleCallbacks {
     // FLAG_NOT_FOCUSABLE implicitly enables FLAG_NOT_TOUCH_MODAL — touches fall through
     private fun passthroughFlags() =
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 
     // Clearing FLAG_NOT_FOCUSABLE also clears the implied FLAG_NOT_TOUCH_MODAL
     private fun interceptFlags() =
-        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
     override fun onActivityStarted(activity: Activity) = Unit
