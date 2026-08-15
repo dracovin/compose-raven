@@ -9,6 +9,7 @@ internal object RavenState {
     val gridEnabled         = MutableStateFlow(false)
     val pickedElement       = MutableStateFlow<PickedElementInfo?>(null)
     val inspectableElements = MutableStateFlow<List<InspectableElement>>(emptyList())
+    val gridConfig          = MutableStateFlow(GridConfig())
 
     fun reset() {
         heatmapEnabled.value      = false
@@ -31,4 +32,5 @@ data class InspectableElement(
     val boundsInWindow: Rect,
     val widthDp: Float,
     val heightDp: Float,
+    val config: InspectorConfig = InspectorConfig(),
 )

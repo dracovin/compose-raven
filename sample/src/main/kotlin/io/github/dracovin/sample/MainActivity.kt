@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import io.github.dracovin.composeraven.InspectorConfig
 import io.github.dracovin.composeraven.features.ravenInspectable
 import io.github.dracovin.composeraven.features.recompositionHeatmap
 
@@ -56,7 +57,13 @@ private fun SampleScreen() {
         Button(
             onClick  = { counter++ },
             modifier = Modifier
-                .ravenInspectable("increment-button")
+                .ravenInspectable(
+                    "increment-button",
+                    config = InspectorConfig(
+                        showTap = false,
+                        crosshairColor = Color.Blue
+                    )
+                )
                 .recompositionHeatmap(),
         ) {
             Text("Increment")

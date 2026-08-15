@@ -20,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -29,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.dracovin.composeraven.InspectableElement
+import io.github.dracovin.composeraven.InspectorConfig
 import io.github.dracovin.composeraven.PickedElementInfo
 import io.github.dracovin.composeraven.RavenState
 
@@ -73,15 +73,16 @@ internal fun ElementPickerOverlay() {
                 val cx  = with(density) { info.xDp.dp.toPx() }
                 val cy  = with(density) { info.yDp.dp.toPx() }
                 val arm = 28f
-                drawLine(Color.Red, Offset(cx - arm, cy), Offset(cx + arm, cy), strokeWidth = 2f)
-                drawLine(Color.Red, Offset(cx, cy - arm), Offset(cx, cy + arm), strokeWidth = 2f)
+                val cfg = info.bounds?.config ?: InspectorConfig()
+                drawLine(cfg.crosshairColor, Offset(cx - arm, cy), Offset(cx + arm, cy), strokeWidth = cfg.strokeWidth)
+                drawLine(cfg.crosshairColor, Offset(cx, cy - arm), Offset(cx, cy + arm), strokeWidth = cfg.strokeWidth)
 
                 info.bounds?.let { el ->
                     val left   = el.boundsInWindow.left.toFloat()
                     val top    = el.boundsInWindow.top.toFloat()
                     val elSize = Size(el.boundsInWindow.width().toFloat(), el.boundsInWindow.height().toFloat())
-                    drawRect(Color(0xFF2196F3).copy(alpha = 0.2f), Offset(left, top), elSize)
-                    drawRect(Color(0xFF2196F3), Offset(left, top), elSize, style = Stroke(width = 2f))
+                    drawRect(el.config.highlightColor.copy(alpha = el.config.highlightFillAlpha), Offset(left, top), elSize)
+                    drawRect(el.config.highlightColor, Offset(left, top), elSize, style = Stroke(width = el.config.strokeWidth))
                 }
             }
         }
@@ -99,11 +100,12 @@ private fun ElementInfoCard(info: PickedElementInfo, modifier: Modifier = Modifi
         elevation = CardDefaults.cardElevation(8.dp),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text("Color  ${info.hexColor}", fontSize = 14.sp)
-            Text("Tap    x=${info.xDp.fmt()}dp  y=${info.yDp.fmt()}dp", fontSize = 12.sp)
+            val cfg = info.bounds?.config
+            if (cfg == null || cfg.showColor) Text("Color  ${info.hexColor}", fontSize = 14.sp)
+            if (cfg == null || cfg.showTap)   Text("Tap    x=${info.xDp.fmt()}dp  y=${info.yDp.fmt()}dp", fontSize = 12.sp)
             info.bounds?.let { el ->
-                Text("Tag    ${el.tag.ifEmpty { "(untagged)" }}", fontSize = 12.sp)
-                Text("Size   W=${el.widthDp.fmt()}dp × H=${el.heightDp.fmt()}dp", fontSize = 12.sp)
+                if (el.config.showTag)  Text("Tag    ${el.tag.ifEmpty { "(untagged)" }}", fontSize = 12.sp)
+                if (el.config.showSize) Text("Size   W=${el.widthDp.fmt()}dp × H=${el.heightDp.fmt()}dp", fontSize = 12.sp)
             }
         }
     }
