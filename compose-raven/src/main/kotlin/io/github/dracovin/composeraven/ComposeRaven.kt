@@ -9,10 +9,13 @@ data class InspectorConfig(
     val showTap: Boolean = true,
     val showTag: Boolean = true,
     val showSize: Boolean = true,
+    val showPosition: Boolean = true,
+    val showGroup: Boolean = true,
     val crosshairColor: Color = Color.Red,
     val highlightColor: Color = Color(0xFF2196F3),
     val highlightFillAlpha: Float = 0.2f,
     val strokeWidth: Float = 2f,
+    val cornerRadius: Float = 0f,
 )
 
 data class GridConfig(

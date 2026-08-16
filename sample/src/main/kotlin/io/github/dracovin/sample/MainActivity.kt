@@ -52,7 +52,9 @@ private fun SampleScreen() {
             text     = "Count: $counter",
             modifier = Modifier
                 .ravenInspectable("counter-text")
-                .recompositionHeatmap(),
+                .recompositionHeatmap(
+                    showCount = true
+                ),
         )
         Button(
             onClick  = { counter++ },
