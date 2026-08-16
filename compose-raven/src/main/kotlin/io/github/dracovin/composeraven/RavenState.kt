@@ -29,6 +29,8 @@ data class PickedElementInfo(
 
 data class InspectableElement(
     val tag: String,
+    val label: String = "",
+    val group: String = "",
     val boundsInWindow: Rect,
     val widthDp: Float,
     val heightDp: Float,
