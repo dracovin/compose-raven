@@ -217,7 +217,7 @@ internal fun Int.toRavenHex(): String = "#%06x".format(this and 0xFFFFFF)
 
 private fun Float.fmt() = "%.1f".format(this)
 
-private fun closestElement(tapOffset: Offset): InspectableElement? {
+internal fun closestElement(tapOffset: Offset): InspectableElement? {
     val x = tapOffset.x.toInt()
     val y = tapOffset.y.toInt()
     val hit = RavenState.inspectableElements.value.filter { it.boundsInWindow.contains(x, y) }

@@ -100,8 +100,9 @@ fun Modifier.ravenInspectable(
     group: String = "",
     config: InspectorConfig = InspectorConfig(),
 ): Modifier = composed {
-    val enabled by RavenState.inspectorEnabled.collectAsStateWithLifecycle()
-    if (!enabled) return@composed Modifier
+    val inspectorOn by RavenState.inspectorEnabled.collectAsStateWithLifecycle()
+    val rulerOn     by RavenState.rulerEnabled.collectAsStateWithLifecycle()
+    if (!inspectorOn && !rulerOn) return@composed Modifier
 
     val density = LocalDensity.current
     onGloballyPositioned { coords ->
