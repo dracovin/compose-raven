@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -30,8 +32,8 @@ dependencies {
     implementation(libs.compose.material.icons.core)
     implementation(libs.startup.runtime)
     implementation(libs.coroutines.android)
-    implementation("androidx.lifecycle:lifecycle-viewmodel:2.8.3")
-    implementation("androidx.savedstate:savedstate:1.2.1")
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.savedstate)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
@@ -45,7 +47,7 @@ publishing {
         create<MavenPublication>("release") {
             groupId    = "io.github.dracovin"
             artifactId = "compose-raven"
-            version    = "0.1.0-alpha01"
+            version    = "0.1.0-alpha02"
 
             afterEvaluate { from(components["release"]) }
 
@@ -63,7 +65,7 @@ publishing {
                     developer {
                         id    = "dracovin"
                         name  = "dracovin"
-                        email = "siddhardha.d@kynhood.com"
+                        email = "vinay.parampalli@gmail.com"
                     }
                 }
                 scm {
@@ -84,11 +86,19 @@ publishing {
 }
 
 signing {
-    val keyId      = providers.gradleProperty("signing.keyId").orNull
     val password   = providers.gradleProperty("signing.password").orNull
+                  ?: providers.gradleProperty("signingPassword").orNull
     val secretRing = providers.gradleProperty("signing.secretKeyRingFile").orNull
-    if (keyId != null && password != null && secretRing != null) {
-        useInMemoryPgpKeys(file(secretRing).readText(), password)
+    val signingKey = providers.gradleProperty("signingKey").orNull
+
+    val resolvedKey = when {
+        signingKey  != null -> String(Base64.getDecoder().decode(signingKey))
+        secretRing  != null -> file(secretRing).readText()
+        else                -> null
+    }
+
+    if (password != null && resolvedKey != null) {
+        useInMemoryPgpKeys(resolvedKey, password)
         sign(publishing.publications["release"])
     }
 }

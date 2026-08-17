@@ -17,9 +17,9 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,24 +32,27 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.MaterialTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.dracovin.composeraven.RavenState
 import io.github.dracovin.composeraven.features.ElementPickerOverlay
 import io.github.dracovin.composeraven.features.GridOverlay
+import io.github.dracovin.composeraven.features.RulerOverlay
 import kotlin.math.roundToInt
 
 @Composable
 internal fun RavenOverlayRoot() {
     MaterialTheme {
-    val heatmapEnabled   by RavenState.heatmapEnabled.collectAsState()
-    val inspectorEnabled by RavenState.inspectorEnabled.collectAsState()
-    val gridEnabled      by RavenState.gridEnabled.collectAsState()
+    val heatmapEnabled   by RavenState.heatmapEnabled.collectAsStateWithLifecycle()
+    val inspectorEnabled by RavenState.inspectorEnabled.collectAsStateWithLifecycle()
+    val gridEnabled      by RavenState.gridEnabled.collectAsStateWithLifecycle()
+    val rulerEnabled     by RavenState.rulerEnabled.collectAsStateWithLifecycle()
     var menuExpanded     by remember { mutableStateOf(false) }
     var fabOffset        by remember { mutableStateOf(Offset.Zero) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (gridEnabled)      GridOverlay()
         if (inspectorEnabled) ElementPickerOverlay()
+        if (rulerEnabled)     RulerOverlay()
 
         Column(
             modifier = Modifier
@@ -74,8 +77,17 @@ internal fun RavenOverlayRoot() {
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     RavenToggleChip("Heatmap",   "Toggle Heatmap",   heatmapEnabled)   { RavenState.heatmapEnabled.value   = !heatmapEnabled }
-                    RavenToggleChip("Inspector", "Toggle Inspector", inspectorEnabled) { RavenState.inspectorEnabled.value = !inspectorEnabled }
+                    RavenToggleChip("Inspector", "Toggle Inspector", inspectorEnabled) {
+                        RavenState.inspectorEnabled.value = !inspectorEnabled
+                        if (!inspectorEnabled) { RavenState.rulerEnabled.value = false; RavenState.rulerStart.value = null; RavenState.rulerEnd.value = null }
+                    }
                     RavenToggleChip("Grid",      "Toggle Grid",      gridEnabled)      { RavenState.gridEnabled.value      = !gridEnabled }
+                    RavenToggleChip("Ruler",     "Toggle Ruler",     rulerEnabled)     {
+                        val next = !rulerEnabled
+                        RavenState.rulerEnabled.value = next
+                        if (next) { RavenState.inspectorEnabled.value = false; RavenState.pickedElement.value = null }
+                        else      { RavenState.rulerStart.value = null; RavenState.rulerEnd.value = null }
+                    }
                 }
             }
 

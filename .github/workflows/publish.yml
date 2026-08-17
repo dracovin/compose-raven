@@ -1,0 +1,43 @@
+name: Publish to Maven Central
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check if version already published
+        id: version-check
+        run: |
+          VERSION=$(grep -m1 'version\s*=\s*"' compose-raven/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://repo1.maven.org/maven2/io/github/dracovin/compose-raven/$VERSION/compose-raven-$VERSION.pom")
+          echo "exists=$( [ "$STATUS" = "200" ] && echo true || echo false )" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-java@v4
+        if: steps.version-check.outputs.exists == 'false'
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.version-check.outputs.exists == 'false'
+
+      - name: Publish
+        if: steps.version-check.outputs.exists == 'false'
+        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+        env:
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
+          ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.OSSRH_USERNAME }}
+          ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
+
+      - name: Create GitHub Release
+        if: steps.version-check.outputs.exists == 'false'
+        run: gh release create "v${{ steps.version-check.outputs.version }}" --title "v${{ steps.version-check.outputs.version }}" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

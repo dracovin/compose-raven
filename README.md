@@ -4,10 +4,12 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![API](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://android-arsenal.com/api?level=26)
 
-A zero-boilerplate in-app debug overlay for Jetpack Compose. Drop it in as a dependency and a floating toolbar appears in your debug build — no setup code required.
+**On-device debug tools for Jetpack Compose. No USB cable. No Android Studio. No setup code.**
+
+Drop it in as a `debugImplementation` dependency and a floating toolbar appears in your debug builds automatically — powered by `androidx.startup`. Tap elements, measure spacing, catch recompositions, and verify grid alignment, all on a real device.
 
 ```kotlin
-implementation("io.github.dracovin:compose-raven:0.1.0-alpha01")
+debugImplementation("io.github.dracovin:compose-raven:0.1.0-alpha02")
 ```
 
 ---
@@ -16,21 +18,91 @@ implementation("io.github.dracovin:compose-raven:0.1.0-alpha01")
 
 ### Recomposition Heatmap
 
-Flashes an orange highlight on any composable every time it recomposes. Add `Modifier.recompositionHeatmap()` to spot unnecessary recompositions instantly.
+<img src="docs/images/heatmap.gif" width="240" align="right"/>
 
-![Recomposition Heatmap](docs/images/heatmap.gif)
+Add `Modifier.recompositionHeatmap()` to any composable and watch it flash on every recomposition. A badge in the corner tracks the count and changes color — green → yellow → red — so heavy recomposers stand out instantly.
+
+```kotlin
+Text(
+    text = "Count: $counter",
+    modifier = Modifier.recompositionHeatmap(showCount = true)
+)
+```
+
+<br clear="right"/>
+
+---
 
 ### Element Inspector
 
-Tap any element tagged with `Modifier.ravenInspectable("tag")` to see its color, position, tag, and size in a card at the bottom of the screen.
+<img src="docs/images/inspector.gif" width="240" align="right"/>
 
-![Element Inspector](docs/images/inspector.gif)
+Tag composables with `Modifier.ravenInspectable()`, then tap them in the overlay to instantly see:
+
+- **Color** — sampled directly from the screen pixel
+- **Size** — exact dp dimensions
+- **Position** — coordinates on screen
+- **Tag & group** — your own labels
+
+**Double-tap** to pin the card so it stays while you scroll or interact. Elements that share a `group` all highlight together — great for nav tabs, chip rows, or any repeated pattern.
+
+```kotlin
+Box(
+    modifier = Modifier
+        .size(120.dp)
+        .background(Color(0xFF6200EE))
+        .ravenInspectable(
+            tag = "hero-card",
+            group = "cards",
+            config = InspectorConfig(highlightColor = Color.Cyan)
+        )
+)
+```
+
+<br clear="right"/>
+
+---
+
+### Ruler
+
+<img src="docs/images/ruler.gif" width="240" align="right"/>
+
+Measure the distance between any two elements without opening Layout Inspector.
+
+- **Tap element 1** → highlighted in pink
+- **Tap element 2** → gap or inset lines drawn with dp labels
+
+**Gap mode** — elements are separate: shows horizontal and/or vertical distance with tick marks.
+
+**Inset mode** — elements overlap or nest: auto-detects inner/outer and shows all four insets (left, right, top, bottom).
+
+A hint chip at the top guides you through each step. Tap again to reset and start a new measurement.
+
+<br clear="right"/>
+
+---
 
 ### Grid Overlay
 
-Draws an 8dp grid with Material Design keylines (16dp cyan, 24dp orange) over the entire screen to verify spacing and alignment.
+<img src="docs/images/grid.gif" width="240" align="right"/>
 
-![Grid Overlay](docs/images/grid.gif)
+Draws an 8dp grid with Material Design keylines over the entire screen. Instantly catch misaligned spacing without measuring manually.
+
+| Color | Keyline |
+|-------|---------|
+| Cyan | 16dp |
+| Orange | 24dp |
+
+```kotlin
+ComposeRaven.setGridConfig(
+    GridConfig(
+        gridSpacing = 8.dp,
+        showKeylines = true
+    )
+)
+```
+
+<br clear="right"/>
 
 ---
 
@@ -40,11 +112,11 @@ Add to your app's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.dracovin:compose-raven:0.1.0-alpha01")
+    debugImplementation("io.github.dracovin:compose-raven:0.1.0-alpha02")
 }
 ```
 
-> Using `debugImplementation` keeps the overlay out of your release builds.
+> `debugImplementation` keeps the overlay out of release builds automatically.
 
 Make sure `mavenCentral()` is in your `settings.gradle.kts`:
 
@@ -57,37 +129,9 @@ dependencyResolutionManagement {
 }
 ```
 
-That's it. No `Application` subclass, no manifest changes, no init code.
+**That's it.** No `Application` subclass. No manifest changes. No init code.
 
----
-
-## Usage
-
-### Recomposition Heatmap
-
-```kotlin
-Text(
-    text = "Count: $counter",
-    modifier = Modifier.recompositionHeatmap()
-)
-```
-
-### Element Inspector
-
-```kotlin
-Box(
-    modifier = Modifier
-        .size(120.dp)
-        .background(Color(0xFFc18a35))
-        .ravenInspectable("amber-box")
-)
-```
-
-The `tag` is optional but helps identify elements in the inspector card.
-
-### Enabling Features
-
-A draggable **⚙️ FAB** appears in the bottom-right corner of every screen. Tap it to expand toggle chips for each feature. Drag it anywhere if it overlaps your UI.
+A draggable **FAB** appears in the bottom-right corner. Tap it to expand toggle chips for each tool. Drag it anywhere if it overlaps your UI.
 
 ---
 
@@ -108,4 +152,4 @@ A draggable **⚙️ FAB** appears in the bottom-right corner of every screen. T
 
 ---
 
-<!-- keywords: jetpack compose debug overlay, compose recomposition heatmap, compose recomposition tracker, android compose ui inspector, jetpack compose layout inspector, compose element picker, android 8dp grid overlay, compose debug tools, jetpack compose performance debugging -->
+<!-- keywords: jetpack compose debug overlay, compose recomposition heatmap, compose recomposition tracker, android compose ui inspector, jetpack compose layout inspector, compose element picker, android 8dp grid overlay, compose ruler spacing tool, compose debug tools, jetpack compose performance debugging -->
