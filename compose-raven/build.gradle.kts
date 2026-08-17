@@ -105,8 +105,8 @@ signing {
 
 nmcp {
     publish("release") {
-        username = providers.gradleProperty("ossrhUsername").get()
-        password = providers.gradleProperty("ossrhPassword").get()
+        username = providers.gradleProperty("ossrhUsername").getOrElse("")
+        password = providers.gradleProperty("ossrhPassword").getOrElse("")
         publicationType = "AUTOMATIC"
     }
 }
