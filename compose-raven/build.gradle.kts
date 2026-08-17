@@ -92,7 +92,7 @@ signing {
     val signingKey = providers.gradleProperty("signingKey").orNull
 
     val resolvedKey = when {
-        signingKey  != null -> String(Base64.getDecoder().decode(signingKey))
+        signingKey  != null -> String(Base64.getMimeDecoder().decode(signingKey))
         secretRing  != null -> file(secretRing).readText()
         else                -> null
     }
