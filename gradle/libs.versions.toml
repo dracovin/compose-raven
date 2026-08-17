@@ -2,6 +2,8 @@
 agp         = "8.5.0"
 kotlin      = "2.0.0"
 composeBom  = "2024.09.00"
+lifecycleViewmodel = "2.8.3"
+savedstate = "1.2.1"
 startup     = "1.1.1"
 coroutines  = "1.8.1"
 
@@ -14,6 +16,8 @@ compose-material-icons-core = { group = "androidx.compose.material",  name = "ma
 compose-ui-tooling          = { group = "androidx.compose.ui",        name = "ui-tooling"                                             }
 compose-ui-test             = { group = "androidx.compose.ui",        name = "ui-test-junit4"                                         }
 compose-ui-test-manifest    = { group = "androidx.compose.ui",        name = "ui-test-manifest"                                       }
+lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycleViewmodel" }
+savedstate = { module = "androidx.savedstate:savedstate", version.ref = "savedstate" }
 startup-runtime             = { group = "androidx.startup",           name = "startup-runtime",            version.ref = "startup"    }
 coroutines-android          = { group = "org.jetbrains.kotlinx",      name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 coroutines-test             = { group = "org.jetbrains.kotlinx",      name = "kotlinx-coroutines-test",    version.ref = "coroutines" }
