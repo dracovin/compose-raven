@@ -3,6 +3,7 @@ package io.github.dracovin.composeraven.features
 import android.graphics.Rect
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -103,6 +104,20 @@ fun Modifier.ravenInspectable(
     val inspectorOn by RavenState.inspectorEnabled.collectAsStateWithLifecycle()
     val rulerOn     by RavenState.rulerEnabled.collectAsStateWithLifecycle()
     if (!inspectorOn && !rulerOn) return@composed Modifier
+
+    DisposableEffect(tag, label) {
+        onDispose {
+            val updated = RavenState.inspectableElements.value.toMutableList()
+            val removed = updated.removeAll { el ->
+                when {
+                    tag.isNotEmpty()   -> el.tag == tag
+                    label.isNotEmpty() -> el.label == label
+                    else               -> false
+                }
+            }
+            if (removed) RavenState.inspectableElements.value = updated
+        }
+    }
 
     val density = LocalDensity.current
     onGloballyPositioned { coords ->

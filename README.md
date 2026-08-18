@@ -9,7 +9,7 @@
 Drop it in as a `debugImplementation` dependency and a floating toolbar appears in your debug builds automatically — powered by `androidx.startup`. Tap elements, measure spacing, catch recompositions, and verify grid alignment, all on a real device.
 
 ```kotlin
-debugImplementation("io.github.dracovin:compose-raven:0.1.0-alpha02")
+debugImplementation("io.github.dracovin:compose-raven:0.1.0-alpha03")
 ```
 
 ---
@@ -44,7 +44,7 @@ Tag composables with `Modifier.ravenInspectable()`, then tap them in the overlay
 - **Position** — coordinates on screen
 - **Tag & group** — your own labels
 
-**Double-tap** to pin the card so it stays while you scroll or interact. Elements that share a `group` all highlight together — great for nav tabs, chip rows, or any repeated pattern.
+**Double-tap** to pin the card so it stays while you scroll or interact. Elements that share a `group` all highlight together — great for nav tabs, chip rows, or any repeated pattern. The inspector automatically clears when navigating away from the screen.
 
 ```kotlin
 Box(
@@ -72,11 +72,11 @@ Measure the distance between any two elements without opening Layout Inspector.
 - **Tap element 1** → highlighted in pink
 - **Tap element 2** → gap or inset lines drawn with dp labels
 
-**Gap mode** — elements are separate: shows horizontal and/or vertical distance with tick marks.
+**Gap mode** — elements are separate: shows horizontal and/or vertical distance with tick marks. When both axes have a gap, a single combined label (`H: 24dp  V: 16dp`) appears at the line crossing — no overlap.
 
 **Inset mode** — elements overlap or nest: auto-detects inner/outer and shows all four insets (left, right, top, bottom).
 
-A hint chip at the top guides you through each step. Tap again to reset and start a new measurement.
+A hint chip at the top guides you through each step. Tap again to reset and start a new measurement. Measurements automatically clear when navigating away from the screen.
 
 <br clear="right"/>
 
@@ -112,7 +112,7 @@ Add to your app's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    debugImplementation("io.github.dracovin:compose-raven:0.1.0-alpha02")
+    debugImplementation("io.github.dracovin:compose-raven:0.1.0-alpha03")
 }
 ```
 

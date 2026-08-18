@@ -2,7 +2,11 @@ package io.github.dracovin.composeraven.features
 
 import android.app.Activity
 import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.Rect
+import android.os.Handler
+import android.os.Looper
+import android.view.Choreographer
+import android.view.PixelCopy
 import android.view.View
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -16,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +54,21 @@ internal fun ElementPickerOverlay() {
     val density       = LocalDensity.current
     val view          = LocalView.current
     var isPinned      by remember { mutableStateOf(false) }
+
+    LaunchedEffect(allElements) {
+        val picked = RavenState.pickedElement.value?.bounds ?: return@LaunchedEffect
+        val present = allElements.any { el ->
+            when {
+                picked.tag.isNotEmpty()   -> el.tag == picked.tag
+                picked.label.isNotEmpty() -> el.label == picked.label
+                else                      -> el.boundsInWindow == picked.boundsInWindow
+            }
+        }
+        if (!present) {
+            RavenState.pickedElement.value = null
+            isPinned = false
+        }
+    }
     var zoomBitmap    by remember { mutableStateOf<ImageBitmap?>(null) }
     val lastTapTime   = remember { longArrayOf(0L) }
 
@@ -66,54 +86,63 @@ internal fun ElementPickerOverlay() {
                     }
                     if (isPinned) return@detectTapGestures
 
-                        val xDp = with(density) { tapOffset.x.toDp().value }
-                        val yDp = with(density) { tapOffset.y.toDp().value }
+                    val xDp = with(density) { tapOffset.x.toDp().value }
+                    val yDp = with(density) { tapOffset.y.toDp().value }
 
-                        val activity    = (view.context as? Activity) ?: return@detectTapGestures
-                        val contentView = activity.findViewById<View>(android.R.id.content)
-                        if (!contentView.isLaidOut) return@detectTapGestures
+                    val activity    = (view.context as? Activity) ?: return@detectTapGestures
+                    val contentView = activity.findViewById<View>(android.R.id.content)
+                    if (!contentView.isLaidOut) return@detectTapGestures
 
-                        val loc = IntArray(2)
-                        contentView.getLocationInWindow(loc)
-                        val px = (tapOffset.x.toInt() - loc[0]).coerceIn(0, contentView.width - 1)
-                        val py = (tapOffset.y.toInt() - loc[1]).coerceIn(0, contentView.height - 1)
+                    val loc = IntArray(2)
+                    contentView.getLocationInWindow(loc)
+                    val screenX = tapOffset.x.toInt()
+                    val screenY = tapOffset.y.toInt()
+                    val px = (screenX - loc[0]).coerceIn(0, contentView.width - 1)
+                    val py = (screenY - loc[1]).coerceIn(0, contentView.height - 1)
 
-                        // Capture zoom area and sample color from its center in one draw call.
-                        val zoomRadius = 40
-                        val zLeft   = (px - zoomRadius).coerceAtLeast(0)
-                        val zTop    = (py - zoomRadius).coerceAtLeast(0)
-                        val zRight  = (px + zoomRadius).coerceAtMost(contentView.width)
-                        val zBottom = (py + zoomRadius).coerceAtMost(contentView.height)
-                        val zW = zRight - zLeft
-                        val zH = zBottom - zTop
+                    val closest = closestElement(tapOffset)
+                    if (closest == null) {
+                        RavenState.pickedElement.value = null
+                        zoomBitmap = null
+                        return@detectTapGestures
+                    }
 
-                        val hex: String
-                        if (zW > 0 && zH > 0) {
-                            val zBmp = Bitmap.createBitmap(zW, zH, Bitmap.Config.ARGB_8888)
-                            val zCvs = Canvas(zBmp)
-                            zCvs.translate(-zLeft.toFloat(), -zTop.toFloat())
-                            contentView.draw(zCvs)
-                            val cx = (px - zLeft).coerceIn(0, zW - 1)
-                            val cy = (py - zTop).coerceIn(0, zH - 1)
-                            hex = zBmp.getPixel(cx, cy).toRavenHex()
-                            zoomBitmap = zBmp.asImageBitmap()
-                        } else {
-                            val fallback = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-                            val fCvs = Canvas(fallback)
-                            fCvs.translate(-px.toFloat(), -py.toFloat())
-                            contentView.draw(fCvs)
-                            hex = fallback.getPixel(0, 0).toRavenHex()
-                            fallback.recycle()
-                            zoomBitmap = null
+                    // Clear overlay so it doesn't bleed into the PixelCopy capture.
+                    // Frame 1: Compose recomposes with null pickedElement (overlay gone).
+                    // Frame 2: hardware surface renders the clean frame.
+                    RavenState.pickedElement.value = null
+                    zoomBitmap = null
+
+                    val zoomRadius = 40
+                    val zLeft   = (px - zoomRadius).coerceAtLeast(0)
+                    val zTop    = (py - zoomRadius).coerceAtLeast(0)
+                    val zRight  = (px + zoomRadius).coerceAtMost(contentView.width)
+                    val zBottom = (py + zoomRadius).coerceAtMost(contentView.height)
+                    val zW = zRight - zLeft
+                    val zH = zBottom - zTop
+
+                    if (zW > 0 && zH > 0) {
+                        val zBmp = Bitmap.createBitmap(zW, zH, Bitmap.Config.ARGB_8888)
+                        Choreographer.getInstance().postFrameCallback {
+                            Choreographer.getInstance().postFrameCallback {
+                                PixelCopy.request(
+                                    activity.window,
+                                    Rect(zLeft + loc[0], zTop + loc[1], zRight + loc[0], zBottom + loc[1]),
+                                    zBmp,
+                                    { result ->
+                                        val cx = (px - zLeft).coerceIn(0, zW - 1)
+                                        val cy = (py - zTop).coerceIn(0, zH - 1)
+                                        val hex = if (result == PixelCopy.SUCCESS) zBmp.getPixel(cx, cy).toRavenHex() else "#000000"
+                                        zoomBitmap = if (result == PixelCopy.SUCCESS) zBmp.asImageBitmap() else null
+                                        RavenState.pickedElement.value = PickedElementInfo(xDp, yDp, hex, closest)
+                                    },
+                                    Handler(Looper.getMainLooper()),
+                                )
+                            }
                         }
-
-                        val closest = closestElement(tapOffset)
-                        if (closest == null) {
-                            RavenState.pickedElement.value = null
-                            zoomBitmap = null
-                            return@detectTapGestures
-                        }
-                        RavenState.pickedElement.value = PickedElementInfo(xDp, yDp, hex, closest)
+                    } else {
+                        RavenState.pickedElement.value = PickedElementInfo(xDp, yDp, "#000000", closest)
+                    }
                 }
             },
     ) {
