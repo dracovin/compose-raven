@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,10 +38,29 @@ private const val TickLen = 14f
 
 @Composable
 internal fun RulerOverlay() {
-    val start    by RavenState.rulerStart.collectAsStateWithLifecycle()
-    val end      by RavenState.rulerEnd.collectAsStateWithLifecycle()
-    val density  = LocalDensity.current
-    val measurer = rememberTextMeasurer()
+    val start       by RavenState.rulerStart.collectAsStateWithLifecycle()
+    val end         by RavenState.rulerEnd.collectAsStateWithLifecycle()
+    val allElements by RavenState.inspectableElements.collectAsStateWithLifecycle()
+    val density     = LocalDensity.current
+    val measurer    = rememberTextMeasurer()
+
+    LaunchedEffect(allElements) {
+        fun isPresent(el: InspectableElement) = allElements.any { live ->
+            when {
+                el.tag.isNotEmpty()   -> live.tag == el.tag
+                el.label.isNotEmpty() -> live.label == el.label
+                else                  -> live.boundsInWindow == el.boundsInWindow
+            }
+        }
+        val s = RavenState.rulerStart.value
+        if (s != null && !isPresent(s)) {
+            RavenState.rulerStart.value = null
+            RavenState.rulerEnd.value   = null
+        } else {
+            val e = RavenState.rulerEnd.value
+            if (e != null && !isPresent(e)) RavenState.rulerEnd.value = null
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -129,7 +149,9 @@ private fun DrawScope.drawMeasurement(
         drawLine(RulerColor, Offset(x1, midY), Offset(x2, midY), strokeWidth = 2f)
         drawLine(RulerColor, Offset(x1, midY - TickLen), Offset(x1, midY + TickLen), strokeWidth = 2f)
         drawLine(RulerColor, Offset(x2, midY - TickLen), Offset(x2, midY + TickLen), strokeWidth = 2f)
-        drawDistanceLabel(measurer, "H: ${with(density) { hGapPx.toDp().value }.fmt()}dp", (x1 + x2) / 2f, midY - 4f, above = true)
+        if (vGapPx == 0f) {
+            drawDistanceLabel(measurer, "H: ${with(density) { hGapPx.toDp().value }.fmt()}dp", (x1 + x2) / 2f, midY - 4f, above = true)
+        }
     }
 
     if (vGapPx > 0f) {
@@ -138,7 +160,15 @@ private fun DrawScope.drawMeasurement(
         drawLine(RulerColor, Offset(midX, y1), Offset(midX, y2), strokeWidth = 2f)
         drawLine(RulerColor, Offset(midX - TickLen, y1), Offset(midX + TickLen, y1), strokeWidth = 2f)
         drawLine(RulerColor, Offset(midX - TickLen, y2), Offset(midX + TickLen, y2), strokeWidth = 2f)
-        drawDistanceLabel(measurer, "V: ${with(density) { vGapPx.toDp().value }.fmt()}dp", midX + TickLen + 4f, (y1 + y2) / 2f, above = false)
+        if (hGapPx == 0f) {
+            drawDistanceLabel(measurer, "V: ${with(density) { vGapPx.toDp().value }.fmt()}dp", midX + TickLen + 4f, (y1 + y2) / 2f, above = false)
+        }
+    }
+
+    if (hGapPx > 0f && vGapPx > 0f) {
+        val hDp = with(density) { hGapPx.toDp().value }.fmt()
+        val vDp = with(density) { vGapPx.toDp().value }.fmt()
+        drawDistanceLabel(measurer, "H: ${hDp}dp  V: ${vDp}dp", midX, midY, above = true)
     }
 }
 

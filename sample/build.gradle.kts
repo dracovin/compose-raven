@@ -27,5 +27,6 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
     implementation(libs.activity.compose)
+    implementation(libs.compose.material.icons.core)
     debugImplementation(project(":compose-raven"))
 }

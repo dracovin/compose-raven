@@ -7,6 +7,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -73,11 +76,11 @@ private fun SampleScreen(modifier: Modifier = Modifier) {
         SectionLabel("Ruler — Gap (tap two separate elements)")
         RulerGapSection()
 
+        SectionLabel("Nested layout (auto-detected via accessibility tree)")
+        NestedInspectableSection()
+
         SectionLabel("Ruler — Inset (tap outer, then inner)")
         RulerInsetSection()
-
-        SectionLabel("Group highlight")
-        GroupSection()
     }
 }
 
@@ -236,29 +239,62 @@ private fun RulerInsetSection() {
 }
 
 @Composable
-private fun GroupSection() {
-    DemoHint("All three share group=\"nav-tabs\". Inspector highlights them together.")
-    Spacer(Modifier.height(8.dp))
-    Row(
+private fun NestedInspectableSection() {
+    DemoHint("Auto-detected via accessibility tree — no modifier needed. Tap anywhere.")
+    Spacer(Modifier.height(12.dp))
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+            .ravenInspectable(
+                tag = "card"
+            ),
+        elevation = CardDefaults.cardElevation(4.dp),
     ) {
-        listOf("Home", "Search", "Profile").forEachIndexed { i, name ->
-            Box(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .ravenInspectable(
+                    tag = "row"
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "Star icon",
+                tint = Color(0xFFFFC107),
                 modifier = Modifier
-                    .background(Color(0xFFE3F2FD), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 20.dp, vertical = 10.dp)
                     .ravenInspectable(
-                        tag = "nav-tab-$i",
-                        label = name,
-                        group = "nav-tabs",
-                        config = InspectorConfig(highlightColor = Color(0xFF1565C0), cornerRadius = 8f),
-                    ),
-                contentAlignment = Alignment.Center,
-            ) { Text(name, fontWeight = FontWeight.Medium) }
+                        tag = "icon"
+                    )
+                    .size(40.dp),
+            )
+            Column(
+                modifier = Modifier
+                    .ravenInspectable(
+                        tag = "column"
+                    )
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = "Title",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.ravenInspectable(
+                        tag = "title"
+                    )
+                )
+                Text(
+                    text = "Subtitle",
+                    fontSize = 13.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.ravenInspectable(
+                        tag = "subtitle"
+                    )
+                )
+            }
         }
     }
 }

@@ -20,7 +20,7 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     publishing {
-        singleVariant("release")
+        singleVariant("release") { withSourcesJar() }
     }
 }
 
@@ -47,7 +47,7 @@ publishing {
         create<MavenPublication>("release") {
             groupId    = "io.github.dracovin"
             artifactId = "compose-raven"
-            version    = "0.1.0-alpha02"
+            version    = "0.1.0-alpha03"
 
             afterEvaluate { from(components["release"]) }
 
